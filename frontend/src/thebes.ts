@@ -120,7 +120,12 @@ function idlHash(name: string): string {
   return h.toString();
 }
 const FIELD_NAMES = new Map<string, string>(
-  ["id", "title", "body"].map((n): [string, string] => [idlHash(n), n])
+  [
+    "id", "title", "body",
+    "noteId", "owner", "author",
+    "from", "to", "fromName", "toName", "amount", "time",
+    "members", "circulation", "expected", "consistent",
+  ].map((n): [string, string] => [idlHash(n), n])
 );
 
 type TypeDef =

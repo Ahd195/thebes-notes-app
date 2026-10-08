@@ -256,3 +256,49 @@ button.secondary:hover:not(:disabled) {
   background: var(--papyrus-deep);
 }
 /* task 2 */
+/* Task 3 — cards, tip row, history */
+.card {
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.8rem;
+}
+.card-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.card-body {
+  margin: 0 0 0.3rem;
+  font-style: italic;
+}
+.card-by {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-family: monospace;
+  word-break: break-all;
+}
+.card-tag {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+.tip-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.tip-input {
+  width: 5rem;
+}
+.balance {
+  margin: 0;
+  font-size: 1.2rem;
+}
+.history-line {
+  margin: 0.4rem 0;
+  font-style: italic;
+  word-break: break-all;
+}
