@@ -51,50 +51,79 @@ persistent actor Backend {
 
 import Map "mo:core/Map";
 import Nat "mo:core/Nat";
+import Text "mo:core/Text";
 import Iter "mo:core/Iter";
 
-// actor = your contract · persistent = the chain remembers
 persistent actor Backend {
 
   // the shape of one note
   public type Note = { id : Nat; title : Text; body : Text };
 
-  // the data — this is the database
+  // global counter for note ids
   var nextId : Nat = 0;
-  let notes = Map.empty<Nat, Note>();
 
-  // CREATE → an update (changes data)
-  public func add_note(title : Text, body : Text) : async Nat {
-    let id = nextId;
-    nextId += 1;
-    Map.add(notes, Nat.compare, id, { id; title; body });
-    id
-  };
+  // owner -> that owner's shelf of notes
+  let shelves = Map.empty<Text, Map.Map<Nat, Note>>();
 
-  // LIST → a query (reads data)
-  public query func list_notes() : async [Note] {
-    Iter.toArray(Map.values(notes))
-  };
-
-  // EDIT → an update (changes data)
-  public func edit_note(id : Nat, title : Text, body : Text) : async Bool {
-    switch (Map.get(notes, Nat.compare, id)) {
-      case (?_) {
-        Map.add(notes, Nat.compare, id, { id; title; body });
-        true
+  // find the owner's shelf, or make an empty one
+  func shelfOrNew(owner : Text) : Map.Map<Nat, Note> {
+    switch (Map.get(shelves, Text.compare, owner)) {
+      case (?s) { s };
+      case null {
+        let s = Map.empty<Nat, Note>();
+        Map.add(shelves, Text.compare, owner, s);
+        s
       };
-      case null { false };
     }
   };
 
-  // DELETE → an update (changes data)
-  public func delete_note(id : Nat) : async Bool {
-    switch (Map.get(notes, Nat.compare, id)) {
-      case (?_) {
-        ignore Map.remove(notes, Nat.compare, id);
-        true
-      };
+  // CREATE → update. An empty owner means "not signed in": refuse.
+  public func addNote(owner : Text, title : Text, body : Text) : async Nat {
+    assert (owner != "");
+    let id = nextId;
+    nextId += 1;
+    Map.add(shelfOrNew(owner), Nat.compare, id, { id; title; body });
+    id
+  };
+
+  // LIST → query. An owner with no shelf has no notes (not an error).
+  public query func listNotes(owner : Text) : async [Note] {
+    switch (Map.get(shelves, Text.compare, owner)) {
+      case null { [] };
+      case (?s) { Iter.toArray(Map.values(s)) };
+    }
+  };
+
+  // EDIT → update. false if this owner has no note with that id
+  // (including when the note exists but belongs to somebody else).
+  public func editNote(owner : Text, id : Nat, title : Text, body : Text) : async Bool {
+    switch (Map.get(shelves, Text.compare, owner)) {
       case null { false };
+      case (?s) {
+        switch (Map.get(s, Nat.compare, id)) {
+          case null { false };
+          case (?_) {
+            Map.add(s, Nat.compare, id, { id; title; body });
+            true
+          };
+        }
+      };
+    }
+  };
+
+  // DELETE → update. Same rule: only from your own shelf.
+  public func deleteNote(owner : Text, id : Nat) : async Bool {
+    switch (Map.get(shelves, Text.compare, owner)) {
+      case null { false };
+      case (?s) {
+        switch (Map.get(s, Nat.compare, id)) {
+          case null { false };
+          case (?_) {
+            ignore Map.remove(s, Nat.compare, id);
+            true
+          };
+        }
+      };
     }
   };
 };
