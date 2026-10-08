@@ -1,0 +1,10 @@
+# build outputs
+build/
+backend/target/
+
+# local identity material never belongs in a repo
+*.seed
+*.secret.json
+node_modules/
+dist/
+build/
